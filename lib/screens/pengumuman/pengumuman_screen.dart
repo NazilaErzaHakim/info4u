@@ -17,6 +17,7 @@ class PengumumanScreen extends ConsumerWidget {
             leading: const Icon(Icons.edit, color: Colors.blue),
             title: const Text("Update"),
             onTap: () {
+              Navigator.pop(context); // tutup bottomsheet dulu
               Navigator.push(
                 context,
                 MaterialPageRoute(
