@@ -14,16 +14,7 @@ class GuruProvider extends StateNotifier<List<Map<String, dynamic>>> {
     "guru",
   );
 
-  // STREAM REALTIME
-  Stream<List<DocumentSnapshot>> streamGuru() {
-    return guruRef.orderBy("createdAt", descending: true).snapshots().map((
-      snapshot,
-    ) {
-      return snapshot.docs;
-    });
-  }
-
-  // ADD GURU
+  // Tambah guru
   Future<void> addGuru({
     required String nama,
     required String nip,
@@ -43,7 +34,15 @@ class GuruProvider extends StateNotifier<List<Map<String, dynamic>>> {
     });
   }
 
-  // DELETE
+  // Stream realtime guru
+  Stream<List<DocumentSnapshot>> streamGuru() {
+    return guruRef
+        .orderBy("createdAt", descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs);
+  }
+
+  // Hapus guru
   Future<void> deleteGuru(String id) async {
     await guruRef.doc(id).delete();
   }

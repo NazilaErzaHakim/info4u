@@ -1,241 +1,98 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/guru_provider.dart';
 
-class GuruScreenAdd extends StatefulWidget {
-  const GuruScreenAdd({super.key});
-
-  @override
-  State<GuruScreenAdd> createState() => _GuruScreenAddState();
-}
-
-class _GuruScreenAddState extends State<GuruScreenAdd> {
-  final CollectionReference guruRef = FirebaseFirestore.instance.collection(
-    'guru',
-  );
-
-  void showAddGuruDialog() {
-    final namaController = TextEditingController();
-    final nipController = TextEditingController();
-    final mapelController = TextEditingController();
-    final emailController = TextEditingController();
-    final noHpController = TextEditingController();
-    final fotoUrlController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Tambah Guru"),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextField(
-                controller: namaController,
-                decoration: const InputDecoration(labelText: "Nama"),
-              ),
-              TextField(
-                controller: nipController,
-                decoration: const InputDecoration(labelText: "NIP"),
-              ),
-              TextField(
-                controller: mapelController,
-                decoration: const InputDecoration(labelText: "Mapel"),
-              ),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(labelText: "Email"),
-              ),
-              TextField(
-                controller: noHpController,
-                decoration: const InputDecoration(labelText: "No HP"),
-              ),
-              TextField(
-                controller: fotoUrlController,
-                decoration: const InputDecoration(labelText: "Foto URL"),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue, // tombol biru
-            ),
-            onPressed: () async {
-              if (namaController.text.isEmpty ||
-                  fotoUrlController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Nama dan Foto URL wajib diisi"),
-                  ),
-                );
-                return;
-              }
-
-              await guruRef.add({
-                "nama": namaController.text,
-                "nip": nipController.text,
-                "mapel": mapelController.text,
-                "email": emailController.text,
-                "noHp": noHpController.text,
-                "fotoUrl": fotoUrlController.text,
-              });
-
-              Navigator.pop(context);
-            },
-            child: const Text("Simpan"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void showOption(BuildContext context, String id) {
-    showDialog(
-      context: context,
-      builder: (context) => SimpleDialog(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.delete),
-            title: const Text("Delete"),
-            onTap: () async {
-              Navigator.pop(context);
-              await guruRef.doc(id).delete();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.close),
-            title: const Text("Close"),
-            onTap: () => Navigator.pop(context),
-          ),
-          
-        ],
-      ),
-    );
-  }
+class GuruAddScreen extends ConsumerWidget {
+  final TextEditingController cNip = TextEditingController();
+  final TextEditingController cNama = TextEditingController();
+  final TextEditingController cMapel = TextEditingController();
+  final TextEditingController cEmail = TextEditingController();
+  final TextEditingController cNoHp = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Daftar Guru"),
-        backgroundColor: Colors.blue, // header biru
-        actions: [
-          IconButton(icon: const Icon(Icons.add), onPressed: showAddGuruDialog),
-        ],
+        title: const Text(
+          "Tambah Guru",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.blue,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: guruRef.snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final listGuru = snapshot.data!.docs;
-
-          if (listGuru.isEmpty) {
-            return const Center(
-              child: Text("Data Guru Kosong", style: TextStyle(fontSize: 16)),
-            );
-          }
-
-          return Padding(
-            padding: const EdgeInsets.all(12),
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.75,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            buildTextField(controller: cNip, label: "NIP"),
+            const SizedBox(height: 16),
+            buildTextField(controller: cNama, label: "Nama"),
+            const SizedBox(height: 16),
+            buildTextField(controller: cMapel, label: "Mata Pelajaran"),
+            const SizedBox(height: 16),
+            buildTextField(controller: cEmail, label: "Email"),
+            const SizedBox(height: 16),
+            buildTextField(controller: cNoHp, label: "No HP"),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              itemCount: listGuru.length,
-              itemBuilder: (context, index) {
-                final data = listGuru[index].data()! as Map<String, dynamic>;
-                final fotoUrl = data["fotoUrl"] ?? "";
-
-                return Card(
-                  elevation: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            Container(
-                              color: Colors.grey[300],
-                              child: fotoUrl.isNotEmpty
-                                  ? Image.network(
-                                      fotoUrl,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      loadingBuilder:
-                                          (context, child, progress) {
-                                            if (progress == null) return child;
-                                            return const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            );
-                                          },
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                            print("Error load image: $error");
-                                            return const Center(
-                                              child: Icon(
-                                                Icons.person,
-                                                size: 50,
-                                              ),
-                                            );
-                                          },
-                                    )
-                                  : const Center(
-                                      child: Icon(Icons.person, size: 50),
-                                    ),
-                            ),
-                            Positioned(
-                              top: 4,
-                              right: 4,
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.more_vert,
-                                  color: Colors.white,
-                                ),
-                                onPressed: () =>
-                                    showOption(context, listGuru[index].id),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              data["nama"] ?? "-",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text("NIP: ${data["nip"] ?? '-'}"),
-                            Text("Mapel: ${data["mapel"] ?? '-'}"),
-                            Text("Email: ${data["email"] ?? '-'}"),
-                            Text("No HP: ${data["noHp"] ?? '-'}"),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
+              onPressed: () async {
+                await ref
+                    .read(guruProvider.notifier)
+                    .addGuru(
+                      nama: cNama.text,
+                      nip: cNip.text,
+                      mapel: cMapel.text,
+                      email: cEmail.text,
+                      noHp: cNoHp.text,
+                      fotoUrl: '', // default kosong
+                    );
+                Navigator.pop(context);
               },
+              child: const Text(
+                "Tambah",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
             ),
-          );
-        },
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildTextField({
+    required TextEditingController controller,
+    required String label,
+  }) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.grey),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.blue),
+        ),
       ),
     );
   }
