@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:info4u/screens/pengumuman/pengumuman_screen.dart';
 import 'package:info4u/screens/siswa/siswa_screen.dart';
 import 'firebase_options.dart';
 import 'screens/dashboard_screen.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
         '/guru': (context) => const GuruScreen(),
         // bisa tambahkan route lain di sini
         '/siswa': (context) => SiswaScreen(),
+        '/pengumuman': (context) => PengumumanScreen(),
       },
     );
   }
