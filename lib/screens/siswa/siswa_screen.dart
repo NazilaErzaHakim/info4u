@@ -48,29 +48,55 @@ class SiswaScreen extends ConsumerWidget {
                   subtitle: Text("NIS: ${s['nis']}\nKelas: ${s['kelas']}"),
                   isThreeLine: true,
 
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Edit
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  SiswaUpdateScreen(siswaId: s["id"], data: s),
-                            ),
-                          );
-                        },
+                  // ----------------------
+                  //   TITIK 3 (POPUP MENU)
+                  // ----------------------
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == "edit") {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                SiswaUpdateScreen(siswaId: s["id"], data: s),
+                          ),
+                        );
+                      } else if (value == "delete") {
+                        ref.read(siswaProvider.notifier).deleteSiswa(s["id"]);
+                      } else if (value == "close") {
+                        Navigator.pop(context);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: "edit",
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, color: Colors.blue),
+                            SizedBox(width: 10),
+                            Text("Edit"),
+                          ],
+                        ),
                       ),
-
-                      // Delete
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          ref.read(siswaProvider.notifier).deleteSiswa(s["id"]);
-                        },
+                      const PopupMenuItem(
+                        value: "delete",
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 10),
+                            Text("Delete"),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: "close",
+                        child: Row(
+                          children: [
+                            Icon(Icons.close, color: Colors.grey),
+                            SizedBox(width: 10),
+                            Text("Close"),
+                          ],
+                        ),
                       ),
                     ],
                   ),

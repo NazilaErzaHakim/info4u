@@ -1,14 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:info4u/screens/guru/guru_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int guru = 0;
+  int siswa = 0;
+  int pengumuman = 0;
+  int ekskul = 0;
+
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    setState(() => loading = true);
+
+    guru = await countData('guru');
+    siswa = await countData('siswa');
+    pengumuman = await countData('pengumuman');
+    ekskul = await countData('ekskul');
+
+    setState(() => loading = false);
+  }
+
+  Future<int> countData(String collection) async {
+    final snap = await FirebaseFirestore.instance.collection(collection).get();
+    return snap.docs.length;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE8F1FF),
 
+      // =============================
+      //        APP BAR + SIDEBAR
+      // =============================
       appBar: AppBar(
         backgroundColor: const Color(0xFF1E88E5),
         title: const Text(
@@ -31,9 +68,8 @@ class DashboardScreen extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // === HEADER DIPERKECIL ===
             SizedBox(
-              height: 57, // kecilin tingginya di sini (default 200)
+              height: 57,
               child: DrawerHeader(
                 decoration: const BoxDecoration(color: Color(0xFF1E88E5)),
                 margin: EdgeInsets.zero,
@@ -58,7 +94,7 @@ class DashboardScreen extends StatelessWidget {
             _drawerItem(context, Icons.schedule, 'Jadwal', '/jadwal'),
             _drawerItem(context, Icons.calendar_month, 'Kalender', '/kalender'),
             _drawerItem(context, Icons.sports_soccer, 'Ekskul', '/ekskul'),
-            _drawerItem(context, Icons.photo_album, 'Galeri Foto', '/galeri'),
+            _drawerItem(context, Icons.photo_album, 'Galeri', '/galeri'),
             _drawerItem(
               context,
               Icons.admin_panel_settings,
@@ -69,65 +105,68 @@ class DashboardScreen extends StatelessWidget {
         ),
       ),
 
-      // -----------------------
-      // BODY DASHBOARD NORMAL
-      // -----------------------
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Ringkasan Data",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+      // =============================
+      //             BODY
+      // =============================
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Ringkasan Data",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
 
-            Row(
-              children: [
-                _dashboardCard(
-                  title: "Guru",
-                  total: 23,
-                  icon: Icons.person,
-                  color: Colors.blue,
-                ),
-                const SizedBox(width: 16),
-                _dashboardCard(
-                  title: "Siswa",
-                  total: 210,
-                  icon: Icons.group,
-                  color: Colors.indigo,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _dashboardCard(
+                        title: "Guru",
+                        total: guru,
+                        icon: Icons.person,
+                        color: Colors.blue,
+                      ),
+                      const SizedBox(width: 16),
+                      _dashboardCard(
+                        title: "Siswa",
+                        total: siswa,
+                        icon: Icons.group,
+                        color: Colors.indigo,
+                      ),
+                    ],
+                  ),
 
-            Row(
-              children: [
-                _dashboardCard(
-                  title: "Pengumuman",
-                  total: 12,
-                  icon: Icons.campaign,
-                  color: Colors.blueAccent,
-                ),
-                const SizedBox(width: 16),
-                _dashboardCard(
-                  title: "Ekskul",
-                  total: 8,
-                  icon: Icons.sports_soccer,
-                  color: Colors.lightBlue,
-                ),
-              ],
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      _dashboardCard(
+                        title: "Pengumuman",
+                        total: pengumuman,
+                        icon: Icons.campaign,
+                        color: Colors.blueAccent,
+                      ),
+                      const SizedBox(width: 16),
+                      _dashboardCard(
+                        title: "Ekskul",
+                        total: ekskul,
+                        icon: Icons.sports_soccer,
+                        color: Colors.lightBlue,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
-  // -------------------------
-  // ITEM DI SIDEBAR (DRAWER)
-  // -------------------------
+  // =========================
+  // ITEM DI SIDEBAR
+  // =========================
   Widget _drawerItem(
     BuildContext context,
     IconData icon,
@@ -137,14 +176,11 @@ class DashboardScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.blue.shade300, // border biru
-          width: 0.8, // border diperkecil
-        ),
-        borderRadius: BorderRadius.circular(10), // sudut sedikit melengkung
+        border: Border.all(color: Colors.blue.shade300, width: 0.8),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
-        leading: Icon(icon, color: Colors.blue, size: 26), // ikon biru 💙
+        leading: Icon(icon, color: Colors.blue, size: 26),
         title: Text(
           text,
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
@@ -157,9 +193,9 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // -------------------------
+  // =========================
   // CARD DASHBOARD
-  // -------------------------
+  // =========================
   Widget _dashboardCard({
     required String title,
     required int total,
@@ -198,5 +234,21 @@ class DashboardScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class SingleChildScrollScrollView extends StatelessWidget {
+  final EdgeInsetsGeometry? padding;
+  final Widget child;
+
+  const SingleChildScrollScrollView({
+    super.key,
+    this.padding,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(padding: padding, child: child);
   }
 }
